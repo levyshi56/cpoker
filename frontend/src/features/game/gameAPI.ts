@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { GameArgs } from './types'
+import type { GameArgs } from '../utilities/types'
 
 // Define a service using a base URL and expected endpoints
 export const gameApi = createApi({
@@ -12,28 +12,17 @@ export const gameApi = createApi({
     }
   }),
   endpoints: (builder) => ({
-    getPlayerHand: builder.query<string, GameArgs>({
-      query: (param) => `/game/${param.gameId}/${param.playerId}/hand`,
-    }),
-    createGame: builder.mutation<string, string>({
-      query: (player_id) => (
+    createGame: builder.mutation<string, void>({
+      query: () => (
         {
           method: 'POST',
-          url: `/game/create_game/${player_id}`,
+          url: `/game/create_game/`,
         }
       ),
     }),
-    joinGame: builder.mutation<string, GameArgs>({
-      query: (gameEntry) => (
-        {
-          method: 'POST',
-          url: `/game/${gameEntry.gameId}/${gameEntry.playerId}/join_game`,
-        }
-      ),
-    })
   }),
 })
 
 // Export hooks for usage in functional components, which are
 // auto-generated based on the defined endpoints
-export const { useGetPlayerHandQuery, useCreateGameMutation, useJoinGameMutation } = gameApi
+export const { useCreateGameMutation } = gameApi

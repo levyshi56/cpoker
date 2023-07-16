@@ -4,7 +4,8 @@ from game.game import Game
 from server.server import Server
 import secrets
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
+import time
 
 app = Flask('app')
 server = Server()
@@ -18,43 +19,19 @@ def hello_world():
     return render_template(
         'index.html')
 
-@app.route('/game/create_game/<player_id>', methods=['POST'])
-def create_game(player_id):
+@app.route('/game/create_game/', methods=['POST'])
+def create_game():
     uid = secrets.token_hex(8)
     server.add_game(uid)
-    server.games[uid].join_game(player_id)
     response = jsonify( f'{uid}')
     response.headers['Content-Type'] = 'application/json'
     response.status_code = 200
-    print("200")
     return response
-
-@app.route('/game/<game_id>/<player_id>/join_game')
-def join_game(game_id, player_id):
-    game = server[game_id]
-    if game:
-        join_game = game.join_game(player_id)
-        if join_game == Game_Capacity.game_full or Game_Capacity.game_can_start:
-            return 200, "game can start"
-        else:
-            return 200, "game can't start"
-    else:
-        return 404, "No game to join"
 
 @app.route('/game/<game_id>/play_card', methods=['POST'])
 def play_card():
     input_json = request.get_json(force=True)
     return
-
-@app.route('/game/<game_id>/<player_id>/hand', methods = ['GET'])
-def get_hand(game_id, player_id):
-    game = server.games[game_id]
-    hand = game.get_hand(player_id)
-    response_object = {"body": hand}
-    response = jsonify(response_object)
-    response.headers['Content-Type'] = 'application/json'
-    response.status_code = 200
-    return response
 
 @app.route('/server/list_games')
 def list_games():
@@ -64,15 +41,51 @@ def list_games():
     response.status_code = 200
     return response
 
-@socketio.on('users')
+@socketio.on('join')
 def handle_connect(body):
-    game_id, player_id = body["game_id"], body["player_id"]
-    game = server[game_id]
-    if game and game.players < game.player_capacity:
+    game_id, player_id = body["gameId"], body["playerId"]
+    game = server.games[game_id]
+    if game and len(game.players) < game.player_capacity:
         game.join_game(player_id)
-        socketio.emit('users online', game.players)
+        game.player_sid[player_id] = request.sid
+        join_room(game_id)
+        emit('users online', game.players, to=game_id)
     else:
-        return socketio.emit('game full', True)
+        return emit('game full', True)
+
+@socketio.on('start game')
+def start_game(payload):
+    gameId = payload["gameId"]
+    game = server.games[gameId]
+    game.deal_cards()
+    emit('game active', True ,to=gameId)
+    for value in range(1,14):
+        for suit in game.suits:
+            owner = game.deck[suit][value]["owner"]
+            time.sleep(.1)
+            if suit == "diamond" and value == 3:
+            
+              emit('my turn', True, to=game.player_sid[owner])
+            emit('receive card', {"suit": suit, "value": value}, to=game.player_sid[owner])
+
+@socketio.on('play card')
+def play_card(payload):
+    game = server.games[payload["gameId"]]
+    cardPlayed = payload["cardPlayed"]
+    game.play_card(cardPlayed)
+    emit('card played', game.last_played, broadcast=True, to=payload["gameId"])
+    player_turn = game.players[game.turn]
+    emit('my turn', True, to=game.player_sid[player_turn])
+    emit('my turn', False, to=request.sid)
+        
+@socketio.on('skip turn')
+def skip_turn(payload):
+    game = server.games[payload["gameId"]]
+    game.next_turn()
+    player_turn = game.players[game.turn]
+    emit('my turn', True, to=game.player_sid[player_turn])
+    emit('my turn', False, to=request.sid)
+
 
 if __name__ == "__main__":
     socketio.run(app)

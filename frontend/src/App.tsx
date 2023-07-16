@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { Game } from './features/game/Game'
-import { useCreateGameMutation, useJoinGameMutation } from './features/game/gameAPI';
+import { useCreateGameMutation } from './features/game/gameAPI';
 import { useAppDispatch, useAppSelector } from './app/hooks';
-import { selectGame, join } from './features/game/gameSlice';
+import { selectGame, join, setPlayerId } from './features/game/gameSlice';
+import { Lobby } from './features/lobby/Lobby';
 
 function App() {
   const dispatch = useAppDispatch();
 
   const [gameCode, setGameCode] = useState('');
   const [createGame, _isLoading] = useCreateGameMutation();
-  const [joinGame, _] = useJoinGameMutation();
-  const [playerId, setPlayerId] = useState('');
+  const [playerIdField, setPlayerIdField] = useState('');
   const { gameId } = useAppSelector(selectGame)
 
   const handleGameCodeChange = (event : any) => {
@@ -20,37 +20,40 @@ function App() {
   };
 
   const handlePlayerIdChange = (event : any) => {
-    setPlayerId(event.target.value);
+    setPlayerIdField(event.target.value);
   };
 
   const handleCreateGame = async () => {
-    createGame(playerId).unwrap().then(async (gameId: string) => {
-      const payload = {gameId: gameId, playerId: playerId}
+    createGame().unwrap().then(async (gameId: string) => {
+      const payload = {gameId: gameId, playerId: playerIdField}
       dispatch(join(payload))
+      dispatch(setPlayerId(playerIdField))
     });
   };
 
   const handleJoinGame = () => {
-    joinGame({playerId, gameId: gameCode}).unwrap().then(async (payload: string) => {
-      dispatch(join(payload))
-    })
+      dispatch(join({gameId: gameCode, playerId: playerIdField}))
+      dispatch(setPlayerId(playerIdField))
   };
 
   return(
     <div className="homepage">
       <h1 className="homepage__title">Chinese Poker Game</h1>
-      {!gameId && 
-            <div className="homepage__preGame">
+      {!gameId && (
+        <div className="homepage__preGame">
+          <div className="homepage__inputWrapper">
             <input
-                type="text"
-                className="homepage__input"
-                placeholder="enter player name"
-                value={playerId}
-                onChange={handlePlayerIdChange}
+              type="text"
+              className="homepage__input"
+              placeholder="Enter player name"
+              value={playerIdField}
+              onChange={handlePlayerIdChange}
             />
             <button className="homepage__button homepage__button--create" onClick={handleCreateGame}>
               Create Game
             </button>
+          </div>
+          <div className="homepage__inputWrapper">
             <input
               type="text"
               className="homepage__input"
@@ -62,10 +65,11 @@ function App() {
               Join Game
             </button>
           </div>
-      }
+        </div>
+      )}
       {gameId &&
-          <div className="homepage__inGame">
-            <Game />
+          <div className="homepage__gamePage">
+            <Lobby />
           </div>
       }
     </div>

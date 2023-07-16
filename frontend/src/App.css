@@ -11,22 +11,23 @@
   margin-bottom: 20px;
 }
 
+.homepage__inputWrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .homepage__input {
   width: 300px;
   height: 40px;
   padding: 8px;
   font-size: 16px;
-  margin-bottom: 20px;
-}
-.homepage__gameDiv{
-  display: flex;
+  margin-right: 10px;
 }
 
 .homepage__button {
   width: 200px;
   height: 40px;
-  background-color: #4caf50;
-  color: #fff;
   font-size: 16px;
   border: none;
   border-radius: 4px;
@@ -35,11 +36,12 @@
 }
 
 .homepage__button:hover {
-  background-color: #45a049;
+  opacity: 0.8;
 }
 
 .homepage__button--create {
   background-color: #2196f3;
+  color: #fff;
 }
 
 .homepage__button--create:hover {
@@ -48,6 +50,7 @@
 
 .homepage__button--join {
   background-color: #ff9800;
+  color: #fff;
 }
 
 .homepage__button--join:hover {

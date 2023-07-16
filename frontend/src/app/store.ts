@@ -1,9 +1,9 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import  gameReducer from '../features/game/gameSlice';
 import { gameApi } from '../features/game/gameAPI';
-import SocketClient from '../socket/socket';
-import socketMiddleware from '../socket/socketMiddleWare';
-import { RootState } from '../features/game/types';
+import SocketClient from '../features/socket/socket';
+import socketMiddleware from '../features/socket/socketMiddleWare';
+import { RootState } from '../features/utilities/types';
 
 const socket = new SocketClient()
 

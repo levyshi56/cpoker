@@ -1,20 +1,31 @@
 export interface Game {
-  hand : Card[];
-  last_played: Card[];
+  hand : CardType[];
+  last_played: CardType[];
   turn: number;
 }
 
 export interface GameState {
+  myHand: CardType[]
   gameId : string;
   playersOnline: string[];
   lobbyFull: boolean;
   inGame: boolean;
+  lastPlayed: BasicCardType[];
+  playerId: string;
+  myTurn: boolean;
 }
 
 
-export interface Card {
+export interface CardType {
   suit : string;
   value : number;
+  inPlay: boolean;
+  disabled: boolean;
+}
+
+export interface BasicCardType{
+  suit: string;
+  value: number
 }
 
 export interface GameArgs{
